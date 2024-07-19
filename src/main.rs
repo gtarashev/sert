@@ -6,6 +6,8 @@ use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
     process::exit,
+    sync::Arc,
+    thread,
 };
 
 fn handle_client(logger: &Logger, mut stream: TcpStream) {
@@ -30,7 +32,7 @@ fn handle_client(logger: &Logger, mut stream: TcpStream) {
 }
 
 fn main() {
-    let logger = Logger::new(true, true);
+    let logger = Arc::new(Logger::new(true, true));
     logger.log(LogLevel::Info, "Starting up");
 
     let addr = "127.0.0.1:6969";
@@ -46,7 +48,10 @@ fn main() {
         logger.log(LogLevel::Info, "Serving client... ");
         match stream {
             Ok(stream) => {
-                handle_client(&logger, stream);
+                let logger = Arc::clone(&logger);
+                thread::spawn(move || {
+                    handle_client(&logger, stream);
+                });
             }
             Err(err) => {
                 logger.log(LogLevel::Error, err);
