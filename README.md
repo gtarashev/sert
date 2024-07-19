@@ -6,7 +6,7 @@
 ### Server
 - handle a general request
 - send the http response from a html file
-- currently single-threaded
+- handling of http requests is multi-threaded
 
 ### Log
 - print to stdout and stderr with logging information
