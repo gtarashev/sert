@@ -18,17 +18,27 @@ fn handle_client(logger: &Logger, mut stream: TcpStream) {
         .take_while(|line| !line.is_empty())
         .collect();
     logger.log(LogLevel::Info, format!("Request: {http_request:#?}"));
+    if http_request.len() == 0 {
+        return;
+    }
 
-    let status_line = "HTTP/1.1 200 OK";
-    let contents = fs::read_to_string("html/test.html").unwrap();
+    let (status, file) = match &http_request[0][..] {
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "html/test.html"),
+        _ => ("HTTP/1.1 404 NOT FOUNT", "html/not_found.html"),
+    };
+
+    let contents = fs::read_to_string(file).unwrap();
     let length = contents.len();
 
     let response = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",
-        status_line, length, contents
+        status, length, contents
     );
 
-    stream.write_all(response.as_bytes()).unwrap();
+    match stream.write_all(response.as_bytes()) {
+        Ok(_) => logger.log(LogLevel::Info, "Client served successfully"),
+        Err(_) => logger.log(LogLevel::Error, "Error sending data."),
+    }
 }
 
 fn main() {
