@@ -1,30 +1,35 @@
+mod errors;
 mod log;
+mod request;
 
 use log::{LogLevel, Logger};
+use request::{HttpMethod, Request};
 use std::{
     fs,
-    io::{prelude::*, BufReader},
+    io::prelude::*,
     net::{TcpListener, TcpStream},
     process::exit,
     sync::Arc,
     thread,
 };
 
-fn handle_client(logger: &Logger, mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
-    logger.log(LogLevel::Info, format!("Request: {http_request:#?}"));
-    if http_request.len() == 0 {
-        return;
-    }
+fn handle_client(logger: &Logger, stream: TcpStream) {
+    let mut request = match Request::try_from(stream) {
+        Ok(request) => request,
+        Err(_) => {
+            logger.log(LogLevel::Error, "Error parsing TCP stream.");
+            return;
+        }
+    };
 
-    let (status, file) = match &http_request[0][..] {
-        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "html/test.html"),
-        _ => ("HTTP/1.1 404 NOT FOUNT", "html/not_found.html"),
+    let status = match request.method {
+        HttpMethod::GET => "HTTP/1.1 200 OK",
+        _ => "HTTP/1.1 404 NOT FOUNT",
+    };
+
+    let file = match &request.content[..] {
+        "/" | "/test.html" | "test.html" => "html/test.html",
+        _ => "html/not_found.html",
     };
 
     let contents = fs::read_to_string(file).unwrap();
@@ -35,7 +40,7 @@ fn handle_client(logger: &Logger, mut stream: TcpStream) {
         status, length, contents
     );
 
-    match stream.write_all(response.as_bytes()) {
+    match request.writer.write(response.as_bytes()) {
         Ok(_) => logger.log(LogLevel::Info, "Client served successfully"),
         Err(_) => logger.log(LogLevel::Error, "Error sending data."),
     }
