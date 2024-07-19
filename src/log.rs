@@ -1,9 +1,9 @@
-use std::io::{self, Write};
-use std::fmt;
-use std::time;
-use termion::color;
 use chrono::offset::Utc;
 use chrono::DateTime;
+use std::fmt;
+use std::io::{self, Write};
+use std::time;
+use termion::color;
 
 pub enum LogLevel {
     Null,
@@ -31,10 +31,7 @@ pub struct Logger {
 // generic implementations for logger that dont require a logger object
 impl Logger {
     pub fn new(time: bool, color: bool) -> Self {
-        Self {
-            time,
-            color,
-        }
+        Self { time, color }
     }
 }
 
@@ -54,7 +51,7 @@ impl Logger {
                 LogLevel::Null => (),
                 LogLevel::Info => _ = write!(writer, "{}", color::Fg(color::Blue)),
                 LogLevel::Warn => _ = write!(writer, "{}", color::Fg(color::Yellow)),
-                LogLevel::Error => _ = write!(writer, "{}",color::Fg(color::Red)),
+                LogLevel::Error => _ = write!(writer, "{}", color::Fg(color::Red)),
             };
         }
 
@@ -63,5 +60,5 @@ impl Logger {
             LogLevel::Error => writeln!(io::stderr(), "{}", String::from_utf8(writer).unwrap()),
             _ => writeln!(io::stdout(), "{}", String::from_utf8(writer).unwrap()),
         };
-   }
+    }
 }
