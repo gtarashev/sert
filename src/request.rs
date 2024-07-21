@@ -2,6 +2,7 @@ use crate::errors::MethodError;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
+#[derive(Debug)]
 pub enum HttpMethod {
     POST,
     GET,
@@ -14,6 +15,7 @@ pub enum HttpMethod {
     PATCH,
 }
 
+#[derive(Debug)]
 pub struct Request {
     pub method: HttpMethod,
     pub content: String,
