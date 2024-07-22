@@ -2,12 +2,22 @@ mod errors;
 mod log;
 mod request;
 mod response;
+mod environment;
 
 use log::{LogLevel, Logger};
 use response::handle_client;
+use environment::Environment;
 use std::{net::TcpListener, process::exit, sync::Arc, thread};
 
 fn main() {
+    let environment = match Environment::from_args() {
+        Ok(environment) => environment,
+        Err(err) => {
+            eprintln!("Error while parsing arguments: {}", err);
+            exit(1);
+        }
+    };
+
     let logger = Arc::new(Logger::new(true, true));
     logger.log(LogLevel::Info, "Starting up");
 
