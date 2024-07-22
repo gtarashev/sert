@@ -1,23 +1,31 @@
 use std::fmt::{self, Debug, Display};
 
-pub struct MethodError {
-    given_method: String,
+pub enum RequestParseError {
+    InvalidMethodError(String),
+    EmptyRequestError,
+    InvalidRequestHeader,
 }
 
-impl Display for MethodError {
+impl Display for RequestParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Invalid request method: {}", self.given_method)
+        match self {
+            RequestParseError::InvalidMethodError(x) => write!(f, "Invalid request method: {}", x),
+            RequestParseError::EmptyRequestError => write!(f, "Request was empty"),
+            RequestParseError::InvalidRequestHeader => {
+                write!(f, "Request header was not formatted correctly")
+            }
+        }
     }
 }
 
-impl Debug for MethodError {
+impl Debug for RequestParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Invalid request method: {}", self.given_method)
-    }
-}
-
-impl MethodError {
-    pub fn new(given_method: String) -> Self {
-        Self { given_method }
+        match self {
+            RequestParseError::InvalidMethodError(x) => write!(f, "Invalid request method: {}", x),
+            RequestParseError::EmptyRequestError => write!(f, "Request was empty"),
+            RequestParseError::InvalidRequestHeader => {
+                write!(f, "Request header was not formatted correctly")
+            }
+        }
     }
 }

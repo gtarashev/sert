@@ -1,4 +1,4 @@
-use crate::errors::MethodError;
+use crate::errors::RequestParseError;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
@@ -23,7 +23,7 @@ pub struct Request {
 }
 
 impl TryFrom<TcpStream> for Request {
-    type Error = MethodError;
+    type Error = RequestParseError;
     fn try_from(mut tcp_stream: TcpStream) -> Result<Self, Self::Error> {
         let buf_reader = BufReader::new(&mut tcp_stream);
         let http_request: Vec<_> = buf_reader
@@ -32,13 +32,14 @@ impl TryFrom<TcpStream> for Request {
             .take_while(|line| !line.is_empty())
             .collect();
         if http_request.len() == 0 {
-            return Err(MethodError::new(String::from("error setting something")));
+            return Err(RequestParseError::EmptyRequestError);
         }
 
         let request_line = http_request[0].split(" ").collect::<Vec<_>>();
         if request_line.len() != 3 {
-            return Err(MethodError::new(String::from("error setting something")));
+            return Err(RequestParseError::InvalidRequestHeader);
         }
+
         let (method, content);
         method = match request_line[0] {
             "POST" => HttpMethod::POST,
@@ -50,7 +51,7 @@ impl TryFrom<TcpStream> for Request {
             "OPTIONS" => HttpMethod::OPTIONS,
             "TRACE" => HttpMethod::TRACE,
             "PATCH" => HttpMethod::PATCH,
-            x => return Err(MethodError::new(String::from(x))),
+            x => return Err(RequestParseError::InvalidMethodError(String::from(x))),
         };
 
         content = String::from(request_line[1]);
