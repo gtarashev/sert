@@ -1,35 +1,11 @@
+mod errors;
 mod log;
+mod request;
+mod response;
 
 use log::{LogLevel, Logger};
-use std::{
-    fs,
-    io::{prelude::*, BufReader},
-    net::{TcpListener, TcpStream},
-    process::exit,
-    sync::Arc,
-    thread,
-};
-
-fn handle_client(logger: &Logger, mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
-    logger.log(LogLevel::Info, format!("Request: {http_request:#?}"));
-
-    let status_line = "HTTP/1.1 200 OK";
-    let contents = fs::read_to_string("html/test.html").unwrap();
-    let length = contents.len();
-
-    let response = format!(
-        "{}\r\nContent-Length: {}\r\n\r\n{}",
-        status_line, length, contents
-    );
-
-    stream.write_all(response.as_bytes()).unwrap();
-}
+use response::handle_client;
+use std::{net::TcpListener, process::exit, sync::Arc, thread};
 
 fn main() {
     let logger = Arc::new(Logger::new(true, true));
