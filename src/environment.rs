@@ -1,7 +1,7 @@
-use std::env;
-use std::process::exit;
-use std::fmt::Write;
 use crate::errors::EnvironmentParseError;
+use std::env;
+use std::fmt::Write;
+use std::process::exit;
 
 pub struct Environment {
     pub color: bool,
@@ -38,9 +38,9 @@ impl Environment {
 
         while let Some(i) = args.next() {
             match &i[..] {
-                "-c"|"--color"|"--colour" => default.color = true,
+                "-c" | "--color" | "--colour" => default.color = true,
 
-                "-t"|"--time" => {
+                "-t" | "--time" => {
                     if let Some(time_format) = args.next() {
                         default.time = time_format;
                     } else {
@@ -48,7 +48,7 @@ impl Environment {
                     }
                 }
 
-                "-h"|"--help" => {
+                "-h" | "--help" => {
                     print_help();
                     exit(0);
                 }

@@ -1,12 +1,12 @@
+mod environment;
 mod errors;
 mod log;
 mod request;
 mod response;
-mod environment;
 
+use environment::Environment;
 use log::{LogLevel, Logger};
 use response::handle_client;
-use environment::Environment;
 use std::{net::TcpListener, process::exit, sync::Arc, thread};
 
 fn main() {
