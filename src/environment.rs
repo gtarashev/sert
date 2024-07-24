@@ -4,6 +4,7 @@ use std::fmt;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::process::exit;
+use std::fs::metadata;
 
 #[derive(Debug)]
 pub struct Environment {
@@ -25,7 +26,7 @@ impl Default for Environment {
         Self {
             color: false,
             time: String::from(""),
-            source_dir: PathBuf::from(""),
+            source_dir: PathBuf::from("./html/"),
         }
     }
 }
@@ -33,7 +34,8 @@ impl Default for Environment {
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "\tcolor:\t{}", self.color)?;
-        writeln!(f, "\ttime:\t{}", self.time)
+        writeln!(f, "\ttime:\t{}", self.time)?;
+        writeln!(f, "\tsource_dir:\t{:?}", self.source_dir)
     }
 }
 
@@ -63,9 +65,17 @@ impl Environment {
                 "-p" | "--path" => {
                     if let Some(path) = args.next() {
                         default.source_dir = PathBuf::from(path.clone());
-                        // check if path exists
-                        if !default.source_dir.as_path().exists() {
-                            return Err(EnvironmentParseError::InvalidPath(path));
+                        // check if the path is a directory
+                        let md = match metadata(default.source_dir.as_path()) {
+                            Ok(md) => md,
+                            Err(err) => {
+                                println!("error: {:#?}", err);
+                                exit(1);
+                            }
+                        };
+
+                        if !md.is_dir() {
+                            return Err(EnvironmentParseError::NotADir(path));
                         }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));
