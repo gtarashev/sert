@@ -11,7 +11,7 @@ use std::{net::TcpListener, process::exit, sync::Arc, thread};
 
 fn main() {
     let environment = match Environment::from_args() {
-        Ok(environment) => environment,
+        Ok(environment) => Arc::new(environment),
         Err(err) => {
             eprintln!("Error while parsing arguments: {}", err);
             exit(1);
@@ -39,8 +39,9 @@ fn main() {
         match stream {
             Ok(stream) => {
                 let logger = Arc::clone(&logger);
+                let env = Arc::clone(&environment);
                 thread::spawn(move || {
-                    handle_client(&logger, stream);
+                    handle_client(&env, &logger, stream);
                 });
             }
             Err(err) => {
