@@ -29,8 +29,18 @@ pub fn handle_client(env: &Environment, logger: &Logger, stream: TcpStream) {
         }
     };
 
-    let contents = match fs::read_to_string(format!("{}{}", env.source_dir.to_str().unwrap(), file))
-    {
+    let filename = format!(
+        "{}/{}",
+        env.source_dir.to_str().unwrap_or_else(|| {
+            logger.log(
+                LogLevel::Error,
+                "Couldn't borrow `source_dir` as str, using \"./html/\"",
+            );
+            "./html/"
+        }),
+        file
+    );
+    let contents = match fs::read_to_string(filename) {
         Ok(x) => x,
         Err(e) => {
             logger.log(
