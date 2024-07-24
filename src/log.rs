@@ -44,7 +44,7 @@ impl Logger {
         if self.time.len() != 0 {
             let now = time::SystemTime::now();
             let datetime: DateTime<Utc> = now.into();
-            let _ = write!(writer, "[{}] ", datetime.format(&self.time));
+            let _ = write!(writer, "{} ", datetime.format(&self.time));
         }
 
         if self.color {
