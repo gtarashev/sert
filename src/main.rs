@@ -1,15 +1,29 @@
+mod environment;
 mod errors;
 mod log;
 mod request;
 mod response;
 
+use environment::Environment;
 use log::{LogLevel, Logger};
 use response::handle_client;
 use std::{net::TcpListener, process::exit, sync::Arc, thread};
 
 fn main() {
-    let logger = Arc::new(Logger::new(true, true));
-    logger.log(LogLevel::Info, "Starting up");
+    let environment = match Environment::from_args() {
+        Ok(environment) => Arc::new(environment),
+        Err(err) => {
+            eprintln!("Error while parsing arguments: {}", err);
+            exit(1);
+        }
+    };
+
+    let logger = Arc::new(Logger::new(environment.time.to_string(), environment.color));
+    logger.log(LogLevel::Info, "Started up logger.");
+    logger.log(
+        LogLevel::Info,
+        format!("Using configuration:\n{}", environment),
+    );
 
     let addr = "127.0.0.1:6969";
     let listener = match TcpListener::bind(addr) {
@@ -25,8 +39,9 @@ fn main() {
         match stream {
             Ok(stream) => {
                 let logger = Arc::clone(&logger);
+                let env = Arc::clone(&environment);
                 thread::spawn(move || {
-                    handle_client(&logger, stream);
+                    handle_client(&env, &logger, stream);
                 });
             }
             Err(err) => {

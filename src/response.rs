@@ -1,11 +1,12 @@
 use crate::{
+    environment::Environment,
     log::{LogLevel, Logger},
     request::{HttpMethod, Request},
 };
 
 use std::{fs, io::Write, net::TcpStream};
 
-pub fn handle_client(logger: &Logger, stream: TcpStream) {
+pub fn handle_client(env: &Environment, logger: &Logger, stream: TcpStream) {
     let mut request = match Request::try_from(stream) {
         Ok(request) => request,
         Err(_) => {
@@ -15,17 +16,50 @@ pub fn handle_client(logger: &Logger, stream: TcpStream) {
     };
     logger.log(LogLevel::Info, format!("{:#?}", request));
 
-    let status = match request.method {
+    let mut status = match request.method {
         HttpMethod::GET => "HTTP/1.1 200 OK",
         _ => "HTTP/1.1 404 NOT FOUNT",
     };
 
     let file = match &request.content[..] {
-        "/" | "/test.html" | "test.html" => "html/test.html",
-        _ => "html/not_found.html",
+        "/" => "index.html",
+        x => x,
     };
 
-    let contents = fs::read_to_string(file).unwrap();
+    let filename = format!(
+        "{}/{}",
+        env.source_dir.to_str().unwrap_or_else(|| {
+            logger.log(
+                LogLevel::Error,
+                "Couldn't borrow `source_dir` as str, using \"./html/\"",
+            );
+            "./html/"
+        }),
+        file
+    );
+    let contents = match fs::read_to_string(filename) {
+        Ok(x) => x,
+        Err(e) => {
+            logger.log(
+                LogLevel::Error,
+                format!("Error opening {:?}/{}: {}", env.source_dir, file, e),
+            );
+            status = "HTTP/1.1 404 NOT FOUNT";
+            String::from(
+                r#"<!DOCTYPE html>
+                <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Not found</title>
+                    </head>
+                    <body>
+                        <h1>Oops!</h1>
+                        <p>Sorry, I don't know what you're asking for.</p>
+                    </body>
+                </html>"#,
+            )
+        }
+    };
     let length = contents.len();
 
     let response = format!(

@@ -1,8 +1,9 @@
-use chrono::offset::Utc;
-use chrono::DateTime;
-use std::fmt;
-use std::io::{self, Write};
-use std::time;
+use chrono::{offset::Utc, DateTime};
+use std::{
+    fmt,
+    io::{self, Write},
+    time,
+};
 use termion::color;
 
 pub enum LogLevel {
@@ -24,13 +25,13 @@ impl fmt::Display for LogLevel {
 }
 
 pub struct Logger {
-    time: bool,
+    time: String,
     color: bool,
 }
 
 // generic implementations for logger that dont require a logger object
 impl Logger {
-    pub fn new(time: bool, color: bool) -> Self {
+    pub fn new(time: String, color: bool) -> Self {
         Self { time, color }
     }
 }
@@ -40,10 +41,10 @@ impl Logger {
     pub fn log<T: fmt::Display>(&self, log_level: LogLevel, msg: T) {
         let mut writer = Vec::new();
         // prepend the time if the option is set
-        if self.time {
+        if self.time.len() != 0 {
             let now = time::SystemTime::now();
             let datetime: DateTime<Utc> = now.into();
-            let _ = write!(writer, "[{}] ", datetime.format("%d-%m-%Y %T"));
+            let _ = write!(writer, "{} ", datetime.format(&self.time));
         }
 
         if self.color {
@@ -57,8 +58,16 @@ impl Logger {
 
         let _ = write!(writer, "{}{}{}", log_level, color::Fg(color::Reset), msg);
         let _ = match log_level {
-            LogLevel::Error => writeln!(io::stderr(), "{}", String::from_utf8(writer).unwrap()),
-            _ => writeln!(io::stdout(), "{}", String::from_utf8(writer).unwrap()),
+            LogLevel::Error => writeln!(
+                io::stderr(),
+                "{}",
+                String::from_utf8(writer).unwrap_or_else(|err| err.to_string())
+            ),
+            _ => writeln!(
+                io::stdout(),
+                "{}",
+                String::from_utf8(writer).unwrap_or_else(|err| err.to_string())
+            ),
         };
     }
 }
