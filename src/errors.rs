@@ -9,6 +9,7 @@ pub enum RequestParseError {
 pub enum EnvironmentParseError {
     NullArg(String),
     InvalidArg(String),
+    InvalidPath(String),
 }
 
 impl Display for EnvironmentParseError {
@@ -20,6 +21,7 @@ impl Display for EnvironmentParseError {
                 x
             ),
             Self::InvalidArg(x) => write!(f, "Invalid option: {}", x),
+            Self::InvalidPath(x) => write!(f, "Invalid directory: {}", x),
         }
     }
 }

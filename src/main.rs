@@ -18,8 +18,9 @@ fn main() {
         }
     };
 
-    let logger = Arc::new(Logger::new(true, true));
-    logger.log(LogLevel::Info, "Starting up");
+    let logger = Arc::new(Logger::new(environment.time.to_string(), environment.color));
+    logger.log(LogLevel::Info, "Started up logger.");
+    logger.log(LogLevel::Info, format!("Using configuration:\n{}", environment));
 
     let addr = "127.0.0.1:6969";
     let listener = match TcpListener::bind(addr) {

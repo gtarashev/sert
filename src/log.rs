@@ -24,13 +24,13 @@ impl fmt::Display for LogLevel {
 }
 
 pub struct Logger {
-    time: bool,
+    time: String,
     color: bool,
 }
 
 // generic implementations for logger that dont require a logger object
 impl Logger {
-    pub fn new(time: bool, color: bool) -> Self {
+    pub fn new(time: String, color: bool) -> Self {
         Self { time, color }
     }
 }
@@ -40,10 +40,10 @@ impl Logger {
     pub fn log<T: fmt::Display>(&self, log_level: LogLevel, msg: T) {
         let mut writer = Vec::new();
         // prepend the time if the option is set
-        if self.time {
+        if self.time.len() != 0 {
             let now = time::SystemTime::now();
             let datetime: DateTime<Utc> = now.into();
-            let _ = write!(writer, "[{}] ", datetime.format("%d-%m-%Y %T"));
+            let _ = write!(writer, "[{}] ", datetime.format(&self.time));
         }
 
         if self.color {
