@@ -18,6 +18,19 @@ fn print_help() {
     let mut output = String::new();
     let _ = writeln!(output, "Usage:");
     let _ = writeln!(output, "\tsert [options]");
+    let _ = writeln!(output, "\nLOGGER OPTIONS");
+    let _ = writeln!(
+        output,
+        "\t-c, --color, --colour\tuses colors when formatting different log output"
+    );
+    let _ = writeln!(
+        output,
+        "\t-t, --time\t\tspecifies the date-time formatting to be used. leave blank for no date-time information. see `man time` for valid formatting"
+    );
+    let _ = writeln!(
+        output,
+        "\t-p, --path\t\tspecifies the directory to use to look for the html files"
+    );
 
     println!("{}", output);
 }
