@@ -22,11 +22,8 @@ pub fn handle_client(env: &Environment, logger: &Logger, stream: TcpStream) {
     };
 
     let file = match &request.content[..] {
-        "/" | "/test.html" | "test.html" => "test.html",
-        _ => {
-            status = "HTTP/1.1 404 NOT FOUNT";
-            "html/not_found.html"
-        }
+        "/" => "index.html",
+        x => x,
     };
 
     let filename = format!(
@@ -47,6 +44,7 @@ pub fn handle_client(env: &Environment, logger: &Logger, stream: TcpStream) {
                 LogLevel::Error,
                 format!("Error opening {:?}/{}: {}", env.source_dir, file, e),
             );
+            status = "HTTP/1.1 404 NOT FOUNT";
             String::from(
                 r#"<!DOCTYPE html>
                 <html lang="en">

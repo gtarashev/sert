@@ -58,8 +58,16 @@ impl Logger {
 
         let _ = write!(writer, "{}{}{}", log_level, color::Fg(color::Reset), msg);
         let _ = match log_level {
-            LogLevel::Error => writeln!(io::stderr(), "{}", String::from_utf8(writer).unwrap()),
-            _ => writeln!(io::stdout(), "{}", String::from_utf8(writer).unwrap()),
+            LogLevel::Error => writeln!(
+                io::stderr(),
+                "{}",
+                String::from_utf8(writer).unwrap_or_else(|err| err.to_string())
+            ),
+            _ => writeln!(
+                io::stdout(),
+                "{}",
+                String::from_utf8(writer).unwrap_or_else(|err| err.to_string())
+            ),
         };
     }
 }

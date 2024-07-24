@@ -30,7 +30,12 @@ impl TryFrom<TcpStream> for Request {
         let buf_reader = BufReader::new(&mut tcp_stream);
         let http_request: Vec<_> = buf_reader
             .lines()
-            .map(|result| result.unwrap())
+            .map(|result| {
+                result.unwrap_or_else(|err| {
+                    eprintln!("Couldn't unwrap http request line: {}", err);
+                    String::from("")
+                })
+            })
             .take_while(|line| !line.is_empty())
             .collect();
         if http_request.len() == 0 {
