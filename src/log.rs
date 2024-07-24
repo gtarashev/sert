@@ -1,8 +1,9 @@
-use chrono::offset::Utc;
-use chrono::DateTime;
-use std::fmt;
-use std::io::{self, Write};
-use std::time;
+use chrono::{offset::Utc, DateTime};
+use std::{
+    fmt,
+    io::{self, Write},
+    time,
+};
 use termion::color;
 
 pub enum LogLevel {

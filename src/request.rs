@@ -1,6 +1,8 @@
 use crate::errors::RequestParseError;
-use std::io::{BufRead, BufReader};
-use std::net::TcpStream;
+use std::{
+    io::{BufRead, BufReader},
+    net::TcpStream,
+};
 
 #[derive(Debug)]
 pub enum HttpMethod {

@@ -1,10 +1,11 @@
 use crate::errors::EnvironmentParseError;
-use std::env;
-use std::fmt;
-use std::fmt::Write;
-use std::path::PathBuf;
-use std::process::exit;
-use std::fs::metadata;
+use std::{
+    env,
+    fmt::{self, Write},
+    fs::metadata,
+    path::PathBuf,
+    process::exit,
+};
 
 #[derive(Debug)]
 pub struct Environment {
