@@ -7,7 +7,7 @@ mod response;
 use environment::Environment;
 use log::{LogLevel, Logger};
 use response::handle_client;
-use std::{net::TcpListener, process::exit, sync::Arc, thread};
+use std::{net::{TcpListener, SocketAddr}, process::exit, sync::Arc, thread};
 
 fn main() {
     let environment = match Environment::from_args() {
@@ -25,7 +25,7 @@ fn main() {
         format!("Using configuration:\n{}", environment),
     );
 
-    let addr = "127.0.0.1:6969";
+    let addr = SocketAddr::new(environment.address.into(), environment.port);
     let listener = match TcpListener::bind(addr) {
         Ok(listener) => listener,
         Err(err) => {

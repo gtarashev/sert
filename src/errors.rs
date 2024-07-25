@@ -11,6 +11,8 @@ pub enum EnvironmentParseError {
     InvalidArg(String),
     InvalidPath(String),
     NotADir(String),
+    InvalidAddr(String),
+    InvalidPort(String),
 }
 
 impl Display for EnvironmentParseError {
@@ -24,6 +26,8 @@ impl Display for EnvironmentParseError {
             Self::InvalidArg(x) => write!(f, "Invalid option: {}", x),
             Self::InvalidPath(x) => write!(f, "Invalid directory: {}", x),
             Self::NotADir(x) => write!(f, "Expected a directory: {}", x),
+            Self::InvalidAddr(x) => write!(f, "Not a valid address: {}", x),
+            Self::InvalidPort(x) => write!(f, "Not a valid port: {}", x),
         }
     }
 }
