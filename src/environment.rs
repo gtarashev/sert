@@ -60,16 +60,23 @@ impl fmt::Display for Environment {
 }
 
 impl Environment {
+    fn process_port(port: String) -> Result<usize, EnvironmentParseError> {
+         match port.parse::<usize>() {
+            Ok(port) => Ok(port),
+            Err(_) => {
+                return Err(EnvironmentParseError::InvalidPort(port.to_string()))
+            }
+        }
+    }
+
     fn process_address(&mut self, input: String) -> Result<(), EnvironmentParseError> {
         let addr = input.split(":").collect::<Vec<_>>();
         match addr.len() {
             1 => (),
             2 => {
-                self.port = match addr[1].parse::<usize>() {
-                    Ok(port) => port,
-                    Err(_) => {
-                        return Err(EnvironmentParseError::InvalidPort(addr[1].to_string()))
-                    }
+                match Self::process_port(addr[1].to_string()) {
+                    Ok(port) => self.port = port,
+                    Err(err) => return Err(err),
                 }
             }
             _ => return Err(EnvironmentParseError::InvalidAddr(input)),
@@ -143,6 +150,15 @@ impl Environment {
                         }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));
+                    }
+                }
+
+                "-P" | "--port" => {
+                    if let Some(port) = args.next() {
+                        match Self::process_port(port.to_string()) {
+                            Ok(port) => default.port = port,
+                            Err(err) => return Err(err),
+                        }
                     }
                 }
 
