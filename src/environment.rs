@@ -13,7 +13,7 @@ pub struct Environment {
     pub time: String,
     pub source_dir: PathBuf,
     pub address: [u8; 4],
-    pub port: usize,
+    pub port: u16,
 }
 
 fn print_help() {
@@ -29,9 +29,19 @@ fn print_help() {
         output,
         "\t-t, --time\t\tspecifies the date-time formatting to be used. leave blank for no date-time information. see `man time` for valid formatting"
     );
+
+    let _ = writeln!(output, "\nSERVER OPTIONS");
     let _ = writeln!(
         output,
         "\t-p, --path\t\tspecifies the directory to use to look for the html files"
+    );
+    let _ = writeln!(
+        output,
+        "\t-a, --address\t\tspecifies the address to use to host the server"
+    );
+    let _ = writeln!(
+        output,
+        "\t-P, --port\t\tspecifies the port to listen on"
     );
 
     println!("{}", output);
@@ -60,8 +70,8 @@ impl fmt::Display for Environment {
 }
 
 impl Environment {
-    fn process_port(port: String) -> Result<usize, EnvironmentParseError> {
-         match port.parse::<usize>() {
+    fn process_port(port: String) -> Result<u16, EnvironmentParseError> {
+         match port.parse::<u16>() {
             Ok(port) => Ok(port),
             Err(_) => {
                 return Err(EnvironmentParseError::InvalidPort(port.to_string()))
