@@ -12,6 +12,8 @@ pub struct Environment {
     pub color: bool,
     pub time: String,
     pub source_dir: PathBuf,
+    pub address: [u8; 4],
+    pub port: usize,
 }
 
 fn print_help() {
@@ -41,19 +43,57 @@ impl Default for Environment {
             color: false,
             time: String::from(""),
             source_dir: PathBuf::from("./html/"),
+            address: [127, 0, 0, 1],
+            port: 6969,
         }
     }
 }
 
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "\tcolor:\t{}", self.color)?;
-        writeln!(f, "\ttime:\t{}", self.time)?;
-        writeln!(f, "\tsource_dir:\t{:?}", self.source_dir)
+        writeln!(f, "\tcolor:\t\t{}", self.color)?;
+        writeln!(f, "\ttime:\t\t{}", self.time)?;
+        writeln!(f, "\tsource_dir:\t{:?}", self.source_dir)?;
+        writeln!(f, "\taddress:\t{:?}", self.address)?;
+        writeln!(f, "\tport:\t\t{:?}", self.port)
     }
 }
 
 impl Environment {
+    fn process_address(&mut self, input: String) -> Result<(), EnvironmentParseError> {
+        let addr = input.split(":").collect::<Vec<_>>();
+        match addr.len() {
+            1 => (),
+            2 => {
+                self.port = match addr[1].parse::<usize>() {
+                    Ok(port) => port,
+                    Err(_) => {
+                        return Err(EnvironmentParseError::InvalidPort(addr[1].to_string()))
+                    }
+                }
+            }
+            _ => return Err(EnvironmentParseError::InvalidAddr(input)),
+        }
+
+        let addr = addr[0].split(".").collect::<Vec<_>>();
+        if addr.len() != 4 {
+            return Err(EnvironmentParseError::InvalidAddr(input));
+        }
+
+        let mut count = 0;
+        for element in addr.into_iter() {
+            match element.parse::<u8>() {
+                Ok(num) => {
+                    self.address[count] = num;
+                    count += 1;
+                },
+                Err(_) => return Err(EnvironmentParseError::InvalidAddr(input)),
+            }
+        };
+
+        Ok(())
+    }
+
     pub fn from_args() -> Result<Self, EnvironmentParseError> {
         let mut default = Self::default();
         let mut args = env::args();
@@ -82,14 +122,24 @@ impl Environment {
                         // check if the path is a directory
                         let md = match metadata(default.source_dir.as_path()) {
                             Ok(md) => md,
-                            Err(err) => {
-                                println!("error: {:#?}", err);
-                                exit(1);
-                            }
+                            Err(_) => return Err(EnvironmentParseError::InvalidPath(path)),
                         };
 
                         if !md.is_dir() {
                             return Err(EnvironmentParseError::NotADir(path));
+                        }
+                    } else {
+                        return Err(EnvironmentParseError::NullArg(i));
+                    }
+                }
+
+                "-a" | "--address" => {
+                    if let Some(x) = args.next() {
+                        match default.process_address(x.to_string()) {
+                            Ok(()) => (),
+                            Err(x) => {
+                                return Err(x);
+                            }
                         }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));
