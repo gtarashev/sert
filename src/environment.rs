@@ -100,10 +100,28 @@ impl Environment {
                 Err(_) => return Err(EnvironmentParseError::InvalidAddr(input)),
             }
         }
-
         Ok(())
     }
 
+    fn process_path(path: String) -> Result<PathBuf, EnvironmentParseError> {
+        // TODO: check if directory can be read from?
+        let pb = PathBuf::from(path.clone());
+        // check if it exists
+        let md = match metadata(pb.as_path()) {
+            Ok(md) => md,
+            Err(_) => return Err(EnvironmentParseError::InvalidPath(path)),
+        };
+
+        // check if its a directory
+        if !md.is_dir() {
+            return Err(EnvironmentParseError::NotADir(path));
+        }
+
+        Ok(pb)
+    }
+}
+
+impl Environment {
     pub fn from_args() -> Result<Self, EnvironmentParseError> {
         let mut default = Self::default();
         let mut args = env::args();
@@ -128,15 +146,9 @@ impl Environment {
 
                 "-p" | "--path" => {
                     if let Some(path) = args.next() {
-                        default.source_dir = PathBuf::from(path.clone());
-                        // check if the path is a directory
-                        let md = match metadata(default.source_dir.as_path()) {
-                            Ok(md) => md,
-                            Err(_) => return Err(EnvironmentParseError::InvalidPath(path)),
-                        };
-
-                        if !md.is_dir() {
-                            return Err(EnvironmentParseError::NotADir(path));
+                        default.source_dir = match Self::process_path(path.to_string()) {
+                            Ok(path) => path,
+                            Err(err) => return Err(err),
                         }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));
