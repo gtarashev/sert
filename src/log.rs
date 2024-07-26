@@ -39,6 +39,7 @@ impl Logger {
 // functions that are called on a logger object
 impl Logger {
     pub fn log<T: fmt::Display>(&self, log_level: LogLevel, msg: T) {
+        // TODO: technically, the logger can fail, but what should be done if it does?
         let mut writer = Vec::new();
         // prepend the time if the option is set
         if self.time.len() != 0 {
