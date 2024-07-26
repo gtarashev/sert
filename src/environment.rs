@@ -39,10 +39,7 @@ fn print_help() {
         output,
         "\t-a, --address\t\tspecifies the address to use to host the server"
     );
-    let _ = writeln!(
-        output,
-        "\t-P, --port\t\tspecifies the port to listen on"
-    );
+    let _ = writeln!(output, "\t-P, --port\t\tspecifies the port to listen on");
 
     println!("{}", output);
 }
@@ -71,11 +68,9 @@ impl fmt::Display for Environment {
 
 impl Environment {
     fn process_port(port: String) -> Result<u16, EnvironmentParseError> {
-         match port.parse::<u16>() {
+        match port.parse::<u16>() {
             Ok(port) => Ok(port),
-            Err(_) => {
-                return Err(EnvironmentParseError::InvalidPort(port.to_string()))
-            }
+            Err(_) => return Err(EnvironmentParseError::InvalidPort(port.to_string())),
         }
     }
 
@@ -83,12 +78,10 @@ impl Environment {
         let addr = input.split(":").collect::<Vec<_>>();
         match addr.len() {
             1 => (),
-            2 => {
-                match Self::process_port(addr[1].to_string()) {
-                    Ok(port) => self.port = port,
-                    Err(err) => return Err(err),
-                }
-            }
+            2 => match Self::process_port(addr[1].to_string()) {
+                Ok(port) => self.port = port,
+                Err(err) => return Err(err),
+            },
             _ => return Err(EnvironmentParseError::InvalidAddr(input)),
         }
 
@@ -103,10 +96,10 @@ impl Environment {
                 Ok(num) => {
                     self.address[count] = num;
                     count += 1;
-                },
+                }
                 Err(_) => return Err(EnvironmentParseError::InvalidAddr(input)),
             }
-        };
+        }
 
         Ok(())
     }
