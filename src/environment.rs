@@ -39,10 +39,7 @@ fn print_help() {
         output,
         "\t-a, --address\t\tspecifies the address to use to host the server"
     );
-    let _ = writeln!(
-        output,
-        "\t-P, --port\t\tspecifies the port to listen on"
-    );
+    let _ = writeln!(output, "\t-P, --port\t\tspecifies the port to listen on");
 
     println!("{}", output);
 }
@@ -71,11 +68,9 @@ impl fmt::Display for Environment {
 
 impl Environment {
     fn process_port(port: String) -> Result<u16, EnvironmentParseError> {
-         match port.parse::<u16>() {
+        match port.parse::<u16>() {
             Ok(port) => Ok(port),
-            Err(_) => {
-                return Err(EnvironmentParseError::InvalidPort(port.to_string()))
-            }
+            Err(_) => return Err(EnvironmentParseError::InvalidPort(port.to_string())),
         }
     }
 
@@ -83,12 +78,10 @@ impl Environment {
         let addr = input.split(":").collect::<Vec<_>>();
         match addr.len() {
             1 => (),
-            2 => {
-                match Self::process_port(addr[1].to_string()) {
-                    Ok(port) => self.port = port,
-                    Err(err) => return Err(err),
-                }
-            }
+            2 => match Self::process_port(addr[1].to_string()) {
+                Ok(port) => self.port = port,
+                Err(err) => return Err(err),
+            },
             _ => return Err(EnvironmentParseError::InvalidAddr(input)),
         }
 
@@ -103,14 +96,32 @@ impl Environment {
                 Ok(num) => {
                     self.address[count] = num;
                     count += 1;
-                },
+                }
                 Err(_) => return Err(EnvironmentParseError::InvalidAddr(input)),
             }
-        };
-
+        }
         Ok(())
     }
 
+    fn process_path(path: String) -> Result<PathBuf, EnvironmentParseError> {
+        // TODO: check if directory can be read from?
+        let pb = PathBuf::from(path.clone());
+        // check if it exists
+        let md = match metadata(pb.as_path()) {
+            Ok(md) => md,
+            Err(_) => return Err(EnvironmentParseError::InvalidPath(path)),
+        };
+
+        // check if its a directory
+        if !md.is_dir() {
+            return Err(EnvironmentParseError::NotADir(path));
+        }
+
+        Ok(pb)
+    }
+}
+
+impl Environment {
     pub fn from_args() -> Result<Self, EnvironmentParseError> {
         let mut default = Self::default();
         let mut args = env::args();
@@ -135,15 +146,9 @@ impl Environment {
 
                 "-p" | "--path" => {
                     if let Some(path) = args.next() {
-                        default.source_dir = PathBuf::from(path.clone());
-                        // check if the path is a directory
-                        let md = match metadata(default.source_dir.as_path()) {
-                            Ok(md) => md,
-                            Err(_) => return Err(EnvironmentParseError::InvalidPath(path)),
-                        };
-
-                        if !md.is_dir() {
-                            return Err(EnvironmentParseError::NotADir(path));
+                        default.source_dir = match Self::process_path(path.to_string()) {
+                            Ok(path) => path,
+                            Err(err) => return Err(err),
                         }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));

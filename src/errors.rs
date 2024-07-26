@@ -1,11 +1,7 @@
 use std::fmt::{self, Debug, Display};
 
-pub enum RequestParseError {
-    InvalidMethodError(String),
-    EmptyRequestError,
-    InvalidRequestHeader,
-}
-
+// Used when parsing command line arguments
+// ========================================
 pub enum EnvironmentParseError {
     NullArg(String),
     InvalidArg(String),
@@ -30,6 +26,14 @@ impl Display for EnvironmentParseError {
             Self::InvalidPort(x) => write!(f, "Not a valid port: {}", x),
         }
     }
+}
+
+// Used when parsing an incoming request into a Request object
+// ===========================================================
+pub enum RequestParseError {
+    InvalidMethodError(String),
+    EmptyRequestError,
+    InvalidRequestHeader,
 }
 
 impl Display for RequestParseError {

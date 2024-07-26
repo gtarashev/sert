@@ -7,7 +7,12 @@ mod response;
 use environment::Environment;
 use log::{LogLevel, Logger};
 use response::handle_client;
-use std::{net::{TcpListener, SocketAddr}, process::exit, sync::Arc, thread};
+use std::{
+    net::{SocketAddr, TcpListener},
+    process::exit,
+    sync::Arc,
+    thread,
+};
 
 fn main() {
     let environment = match Environment::from_args() {
