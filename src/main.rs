@@ -10,9 +10,43 @@ use response::handle_client;
 use std::{
     net::{SocketAddr, TcpListener},
     process::exit,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     thread,
 };
+
+fn listener_loop(
+    listener: TcpListener,
+    environment: Arc<Environment>,
+    logger: Arc<Logger>,
+    stop: Arc<AtomicBool>,
+) {
+    for stream in listener.incoming() {
+        // interrupt for stopping the thread. since `listener.incoming()` is blocking
+        // it will only run when a request comes in. this means that there might be
+        // a need to force stop the thread after some times since there is no
+        // guarantee otherwise
+        if !stop.load(Ordering::SeqCst) {
+            break;
+        }
+
+        logger.log(LogLevel::Info, "Serving client... ");
+        match stream {
+            Ok(stream) => {
+                let logger = Arc::clone(&logger);
+                let env = Arc::clone(&environment);
+                thread::spawn(move || {
+                    handle_client(&env, &logger, stream);
+                });
+            }
+            Err(err) => {
+                logger.log(LogLevel::Error, err);
+            }
+        }
+    }
+}
 
 fn main() {
     let environment = match Environment::from_args() {
@@ -22,6 +56,7 @@ fn main() {
             exit(1);
         }
     };
+    let stop = Arc::new(AtomicBool::new(false));
 
     let logger = Arc::new(Logger::new(environment.time.to_string(), environment.color));
     logger.log(LogLevel::Info, "Started up logger.");
@@ -39,19 +74,12 @@ fn main() {
         }
     };
 
-    for stream in listener.incoming() {
-        logger.log(LogLevel::Info, "Serving client... ");
-        match stream {
-            Ok(stream) => {
-                let logger = Arc::clone(&logger);
-                let env = Arc::clone(&environment);
-                thread::spawn(move || {
-                    handle_client(&env, &logger, stream);
-                });
-            }
-            Err(err) => {
-                logger.log(LogLevel::Error, err);
-            }
+    let _listener_handle = thread::spawn({
+        let stop = stop.clone();
+        let env = environment.clone();
+        let logger = logger.clone();
+        move || {
+            listener_loop(listener, env, logger, stop);
         }
-    }
+    });
 }
