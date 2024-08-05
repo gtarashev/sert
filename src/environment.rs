@@ -19,6 +19,7 @@ pub struct Environment {
     pub source_dir: PathBuf,
     pub address: [u8; 4],
     pub port: u16,
+    pub timeout: u64,
 }
 
 //      impl(s)
@@ -31,6 +32,7 @@ impl Default for Environment {
             source_dir: PathBuf::from("./html/"),
             address: [127, 0, 0, 1],
             port: 6969,
+            timeout: 5000,
         }
     }
 }
@@ -42,7 +44,8 @@ impl fmt::Display for Environment {
         writeln!(f, "\ttime:\t\t{}", self.time)?;
         writeln!(f, "\tsource_dir:\t{:?}", self.source_dir)?;
         writeln!(f, "\taddress:\t{:?}", self.address)?;
-        writeln!(f, "\tport:\t\t{:?}", self.port)
+        writeln!(f, "\tport:\t\t{:?}", self.port)?;
+        writeln!(f, "\ttimeout:\t{:?}", self.timeout)
     }
 }
 
@@ -71,6 +74,10 @@ impl Environment {
         let _ = writeln!(
             output,
             "\t-a, --address\t\tspecifies the address to use to host the server"
+        );
+        let _ = writeln!(
+            output,
+            "\t-T, --timeout\t\tspecifies the amount of milliseconds the program should wait for the listener thread before terminating"
         );
         let _ = writeln!(output, "\t-P, --port\t\tspecifies the port to listen on");
 
@@ -185,6 +192,15 @@ impl Environment {
                         match Self::process_port(port.to_string()) {
                             Ok(port) => default.port = port,
                             Err(err) => return Err(err),
+                        }
+                    }
+                }
+
+                "-T" | "--timeout" => {
+                    if let Some(timeout) = args.next() {
+                        default.timeout = match timeout.parse::<u64>() {
+                            Ok(number) => number,
+                            Err(_) => return Err(EnvironmentParseError::InvalidTimeout(timeout)),
                         }
                     }
                 }

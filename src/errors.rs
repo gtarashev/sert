@@ -12,6 +12,7 @@ pub enum EnvironmentParseError {
     NotADir(String),
     InvalidAddr(String),
     InvalidPort(String),
+    InvalidTimeout(String),
 }
 
 // Used when parsing an incoming request into a Request object
@@ -36,6 +37,7 @@ impl Display for EnvironmentParseError {
             Self::NotADir(x) => write!(f, "Expected a directory: {}", x),
             Self::InvalidAddr(x) => write!(f, "Not a valid address: {}", x),
             Self::InvalidPort(x) => write!(f, "Not a valid port: {}", x),
+            Self::InvalidTimeout(x) => write!(f, "Not a valid timeout: {}", x),
         }
     }
 }
