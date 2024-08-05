@@ -1,7 +1,10 @@
+//      imports
+//      =======
 use std::fmt::{self, Debug, Display};
 
+//      structures
+//      ==========
 // Used when parsing command line arguments
-// ========================================
 pub enum EnvironmentParseError {
     NullArg(String),
     InvalidArg(String),
@@ -11,6 +14,15 @@ pub enum EnvironmentParseError {
     InvalidPort(String),
 }
 
+// Used when parsing an incoming request into a Request object
+pub enum RequestParseError {
+    InvalidMethodError(String),
+    EmptyRequestError,
+    InvalidRequestHeader,
+}
+
+//      impl(s)
+//      =======
 impl Display for EnvironmentParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -28,14 +40,7 @@ impl Display for EnvironmentParseError {
     }
 }
 
-// Used when parsing an incoming request into a Request object
-// ===========================================================
-pub enum RequestParseError {
-    InvalidMethodError(String),
-    EmptyRequestError,
-    InvalidRequestHeader,
-}
-
+// --------
 impl Display for RequestParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

@@ -1,3 +1,5 @@
+//      imports
+//      =======
 use crate::{
     environment::Environment,
     log::{LogLevel, Logger},
@@ -6,6 +8,8 @@ use crate::{
 
 use std::{fs, io::Write, net::TcpStream};
 
+//      functions
+//      =========
 pub fn handle_client(env: &Environment, logger: &Logger, stream: TcpStream) {
     let mut request = match Request::try_from(stream) {
         Ok(request) => request,
