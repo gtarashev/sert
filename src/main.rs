@@ -1,19 +1,27 @@
+//      modules
+//      =======
 mod environment;
 mod errors;
+mod event_loop;
 mod log;
 mod request;
 mod response;
-mod event_loop;
 
+//      imports
+//      =======
+// crate
 use environment::Environment;
-use log::{LogLevel, Logger};
 use event_loop::start_listener;
+use log::{LogLevel, Logger};
+// std
 use std::{
     net::{SocketAddr, TcpListener},
     process::exit,
     sync::Arc,
 };
 
+//      functions
+//      =========
 fn main() {
     let environment = match Environment::from_args() {
         Ok(environment) => Arc::new(environment),

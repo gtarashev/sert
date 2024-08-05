@@ -1,11 +1,18 @@
-use chrono::{offset::Utc, DateTime};
+//      imports
+//      =======
+// std
 use std::{
     fmt,
     io::{self, Write},
     time,
 };
+//termion
 use termion::color;
+// chrono
+use chrono::{offset::Utc, DateTime};
 
+//      structures
+//      ==========
 pub enum LogLevel {
     Null,
     Info,
@@ -13,6 +20,13 @@ pub enum LogLevel {
     Error,
 }
 
+pub struct Logger {
+    time: String,
+    color: bool,
+}
+
+//      impl(s)
+//      =======
 impl fmt::Display for LogLevel {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -24,20 +38,11 @@ impl fmt::Display for LogLevel {
     }
 }
 
-pub struct Logger {
-    time: String,
-    color: bool,
-}
-
-// generic implementations for logger that dont require a logger object
 impl Logger {
     pub fn new(time: String, color: bool) -> Self {
         Self { time, color }
     }
-}
 
-// functions that are called on a logger object
-impl Logger {
     pub fn log<T: fmt::Display>(&self, log_level: LogLevel, msg: T) {
         // TODO: technically, the logger can fail, but what should be done if it does?
         let mut writer = Vec::new();

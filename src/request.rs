@@ -1,9 +1,14 @@
+//      imports
+//      =======
 use crate::errors::RequestParseError;
+
 use std::{
     io::{BufRead, BufReader},
     net::TcpStream,
 };
 
+//      structures
+//      ==========
 #[derive(Debug)]
 pub enum HttpMethod {
     POST,
@@ -24,6 +29,8 @@ pub struct Request {
     pub writer: TcpStream,
 }
 
+//      impl(s)
+//      =======
 impl TryFrom<TcpStream> for Request {
     type Error = RequestParseError;
     fn try_from(mut tcp_stream: TcpStream) -> Result<Self, Self::Error> {
