@@ -202,6 +202,8 @@ impl Environment {
                             Ok(number) => number,
                             Err(_) => return Err(EnvironmentParseError::InvalidTimeout(timeout)),
                         }
+                    } else {
+                        return Err(EnvironmentParseError::NullArg(i));
                     }
                 }
 

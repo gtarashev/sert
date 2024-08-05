@@ -26,7 +26,7 @@ fn main() {
     let environment = match Environment::from_args() {
         Ok(environment) => Arc::new(environment),
         Err(err) => {
-            eprintln!("Error while parsing arguments: {}", err);
+            eprintln!("Error: {}", err);
             exit(1);
         }
     };
