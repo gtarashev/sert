@@ -3,7 +3,6 @@
 use crate::errors::EnvironmentParseError;
 
 use std::{
-    env,
     fmt::{self, Write},
     fs::metadata,
     path::PathBuf,
@@ -84,19 +83,21 @@ impl Environment {
         println!("{}", output);
     }
 
-    fn process_port(port: String) -> Result<u16, EnvironmentParseError> {
+    fn process_port(&mut self, port: String) -> Result<(), EnvironmentParseError> {
         match port.parse::<u16>() {
-            Ok(port) => Ok(port),
+            Ok(port) => self.port = port,
             Err(_) => return Err(EnvironmentParseError::InvalidPort(port.to_string())),
         }
+
+        Ok(())
     }
 
     fn process_address(&mut self, input: String) -> Result<(), EnvironmentParseError> {
         let addr = input.split(":").collect::<Vec<_>>();
         match addr.len() {
             1 => (),
-            2 => match Self::process_port(addr[1].to_string()) {
-                Ok(port) => self.port = port,
+            2 => match self.process_port(addr[1].to_string()) {
+                Ok(()) => (),
                 Err(err) => return Err(err),
             },
             _ => return Err(EnvironmentParseError::InvalidAddr(input)),
@@ -120,7 +121,7 @@ impl Environment {
         Ok(())
     }
 
-    fn process_path(path: String) -> Result<PathBuf, EnvironmentParseError> {
+    fn process_path(&mut self, path: String) -> Result<(), EnvironmentParseError> {
         // TODO: check if directory can be read from?
         let pb = PathBuf::from(path.clone());
         // check if it exists
@@ -134,30 +135,69 @@ impl Environment {
             return Err(EnvironmentParseError::NotADir(path));
         }
 
-        Ok(pb)
+        self.source_dir = pb;
+        Ok(())
+    }
+
+    fn process_color(&mut self, option: Option<String>) -> Result<(), EnvironmentParseError> {
+        let c = match option {
+            Some(to_parse) => match &(to_parse.to_lowercase())[..] {
+                "true" => true,
+                "false" => false,
+                _ => {
+                    return Err(EnvironmentParseError::InvalidOption(
+                        String::from("color"),
+                        to_parse,
+                    ))
+                }
+            },
+            None => true,
+        };
+
+        self.color = c;
+
+        Ok(())
+    }
+
+    fn process_timeout(&mut self, timeout: String) -> Result<(), EnvironmentParseError> {
+        self.timeout = match timeout.parse::<u64>() {
+            Ok(number) => number,
+            Err(_) => return Err(EnvironmentParseError::InvalidTimeout(timeout)),
+        };
+
+        Ok(())
+    }
+
+    fn process_time(&mut self, time: String) -> Result<(), EnvironmentParseError> {
+        self.time = time;
+        Ok(())
     }
 }
 
 // --------
 // public functions
 impl Environment {
-    pub fn from_args() -> Result<Self, EnvironmentParseError> {
+    pub fn from_args<T: ExactSizeIterator<Item = String>>(
+        mut args: T,
+    ) -> Result<Self, EnvironmentParseError> {
         let mut default = Self::default();
-        let mut args = env::args();
-        if args.len() == 1 {
+        if args.len() == 0 {
             return Ok(default);
         }
 
-        // first arg is the name of the program
-        let _ = args.next();
-
         while let Some(i) = args.next() {
             match &i[..] {
-                "-c" | "--color" | "--colour" => default.color = true,
+                "-c" | "--color" | "--colour" => match default.process_color(None) {
+                    Ok(_) => (),
+                    Err(err) => return Err(err),
+                },
 
                 "-t" | "--time" => {
                     if let Some(time_format) = args.next() {
-                        default.time = time_format;
+                        match default.process_time(time_format) {
+                            Ok(_) => (),
+                            Err(err) => return Err(err),
+                        }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));
                     }
@@ -165,8 +205,8 @@ impl Environment {
 
                 "-p" | "--path" => {
                     if let Some(path) = args.next() {
-                        default.source_dir = match Self::process_path(path.to_string()) {
-                            Ok(path) => path,
+                        match default.process_path(path) {
+                            Ok(_) => (),
                             Err(err) => return Err(err),
                         }
                     } else {
@@ -175,9 +215,9 @@ impl Environment {
                 }
 
                 "-a" | "--address" => {
-                    if let Some(x) = args.next() {
-                        match default.process_address(x.to_string()) {
-                            Ok(()) => (),
+                    if let Some(addr) = args.next() {
+                        match default.process_address(addr) {
+                            Ok(_) => (),
                             Err(x) => {
                                 return Err(x);
                             }
@@ -189,8 +229,8 @@ impl Environment {
 
                 "-P" | "--port" => {
                     if let Some(port) = args.next() {
-                        match Self::process_port(port.to_string()) {
-                            Ok(port) => default.port = port,
+                        match default.process_port(port) {
+                            Ok(_) => (),
                             Err(err) => return Err(err),
                         }
                     }
@@ -198,9 +238,9 @@ impl Environment {
 
                 "-T" | "--timeout" => {
                     if let Some(timeout) = args.next() {
-                        default.timeout = match timeout.parse::<u64>() {
-                            Ok(number) => number,
-                            Err(_) => return Err(EnvironmentParseError::InvalidTimeout(timeout)),
+                        match default.process_timeout(timeout) {
+                            Ok(_) => (),
+                            Err(err) => return Err(err),
                         }
                     } else {
                         return Err(EnvironmentParseError::NullArg(i));

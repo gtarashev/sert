@@ -15,6 +15,7 @@ use event_loop::start_listener;
 use log::{LogLevel, Logger};
 // std
 use std::{
+    env,
     net::{SocketAddr, TcpListener},
     process::exit,
     sync::Arc,
@@ -23,7 +24,9 @@ use std::{
 //      functions
 //      =========
 fn main() {
-    let environment = match Environment::from_args() {
+    let mut args = env::args();
+    let _ = args.next();
+    let environment = match Environment::from_args(args) {
         Ok(environment) => Arc::new(environment),
         Err(err) => {
             eprintln!("Error: {}", err);
