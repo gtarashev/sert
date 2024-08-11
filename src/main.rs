@@ -26,7 +26,8 @@ use std::{
 fn main() {
     let mut args = env::args();
     let _ = args.next();
-    let environment = match Environment::from_args(args) {
+    let default = Environment::default();
+    let environment = match Environment::from_args(default, args) {
         Ok(environment) => Arc::new(environment),
         Err(err) => {
             eprintln!("Error: {}", err);
