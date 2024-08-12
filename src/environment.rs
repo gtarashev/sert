@@ -234,6 +234,8 @@ impl Environment {
                             Ok(_) => (),
                             Err(err) => return Err(err),
                         }
+                    } else {
+                        return Err(EnvironmentParseError::NullArg(i));
                     }
                 }
 
