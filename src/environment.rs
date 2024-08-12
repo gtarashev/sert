@@ -173,54 +173,6 @@ impl Environment {
         self.time = time;
         Ok(())
     }
-
-    // the config file format will be very simple:
-    // `key = value` and spaces before and after do not matter
-    // comments start with `#`
-    pub fn process_config(&mut self, filename: String) -> Result<(), EnvironmentParseError> {
-        let mut file = match File::open(&filename) {
-            Ok(file) => file,
-            Err(_) => {
-                return Err(EnvironmentParseError::ConfigFileError(format!(
-                    "Could not open file: {}",
-                    filename
-                )))
-            }
-        };
-
-        let mut lines = String::new();
-        match file.read_to_string(&mut lines) {
-            Ok(_) => (),
-            Err(err) => {
-                return Err(EnvironmentParseError::ConfigFileError(format!(
-                    "Error reading file: {}",
-                    err
-                )))
-            }
-        }
-
-        let mut line_num = 1;
-        let mut args: Vec<String> = Vec::new();
-        for line in lines.lines() {
-            let split = line.split("=")
-                .collect::<Vec<_>>();
-            if split.len() != 2 {
-                return Err(EnvironmentParseError::ConfigFileError(format!(
-                    "Incorrect formatting on line {}",
-                    line_num
-                )));
-            }
-            args.push(format!("--{}", split[0].trim_end().trim_start()));
-            args.push(format!("{}", split[1].trim_end().trim_start()));
-            line_num += 1;
-        }
-
-        *self = match Self::from_args(self.clone(), args.into_iter()) {
-            Ok(s) => s.clone(),
-            Err(err) => return Err(err),
-        };
-        Ok(())
-    }
 }
 
 // --------
@@ -303,14 +255,104 @@ impl Environment {
 
                 "-C" | "--config-file" => {
                     if let Some(filename) = args.next() {
-                        match default.process_config(filename) {
-                            Ok(_) => (),
+                        default = match Self::from_config(default, filename) {
+                            Ok(e) => e,
                             Err(err) => return Err(err),
                         }
                     }
                 }
 
                 _ => return Err(EnvironmentParseError::InvalidArg(i)),
+            }
+        }
+
+        return Ok(default);
+    }
+
+    pub fn from_config(
+        mut default: Self,
+        filename: String,
+    ) -> Result<Self, EnvironmentParseError> {
+
+        let mut file = match File::open(&filename) {
+            Ok(file) => file,
+            Err(_) => {
+                return Err(EnvironmentParseError::ConfigFileError(format!(
+                    "Could not open file: {}",
+                    filename
+                )));
+            }
+        };
+
+        let mut lines = String::new();
+        match file.read_to_string(&mut lines) {
+            Ok(_) => (),
+            Err(err) => {
+                return Err(EnvironmentParseError::ConfigFileError(format!(
+                    "Error reading file: {}",
+                    err
+                )))
+            }
+        }
+
+        let mut line_num = 0;
+        for line in lines.lines() {
+            line_num += 1;
+            let split = line.split("=").collect::<Vec<_>>();
+            if split.len() != 2 {
+                return Err(EnvironmentParseError::ConfigFileError(format!(
+                    "Incorrect formatting on line {}",
+                    line_num
+                )));
+            }
+            let key = split[0].trim();
+            let value = split[1].trim();
+
+            match key.trim() {
+                "color" | "colour" => match default.process_color(Some(value.into())) {
+                    Ok(_) => (),
+                    Err(err) => return Err(err),
+                },
+
+                "time" => {
+                    match default.process_time(value.into()) {
+                        Ok(_) => (),
+                        Err(err) => return Err(err),
+                    }
+                }
+
+                "path" => {
+                    match default.process_path(value.into()) {
+                        Ok(_) => (),
+                        Err(err) => return Err(err),
+                    }
+                }
+
+                "address" => {
+                    match default.process_address(value.into()) {
+                        Ok(_) => (),
+                        Err(x) => {
+                            return Err(x);
+                        }
+                    }
+                }
+
+                "port" => {
+                    match default.process_port(value.into()) {
+                        Ok(_) => (),
+                        Err(err) => return Err(err),
+                    }
+                }
+
+                "timeout" => {
+                    match default.process_timeout(value.into()) {
+                        Ok(_) => (),
+                        Err(err) => return Err(err),
+                    }
+                }
+
+                _ => return Err(EnvironmentParseError::InvalidArg(key.into())),
+
             }
         }
 
