@@ -300,15 +300,23 @@ impl Environment {
         let mut line_num = 0;
         for line in lines.lines() {
             line_num += 1;
+            // comments start with #
+            if line.trim().starts_with("#") {
+                continue;
+            }
+            // the split might interrupt if there are values which contain `=`
+            // one way to combat this would be split_once, but that is a nightly
+            // only function, so i can just join all the key arguments back
             let split = line.split("=").collect::<Vec<_>>();
-            if split.len() != 2 {
+            if split.len() < 2 {
                 return Err(EnvironmentParseError::ConfigFileError(format!(
                     "Incorrect formatting on line {}",
                     line_num
                 )));
             }
             let key = split[0].trim();
-            let value = split[1].trim();
+            let value = split[1..].join("");
+            let value = value.trim();
 
             match key.trim() {
                 "color" | "colour" => match default.process_color(Some(value.into())) {
