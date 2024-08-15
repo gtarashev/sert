@@ -348,7 +348,7 @@ impl Environment {
                     Err(err) => return Err(err),
                 },
 
-                _ => return Err(EnvironmentParseError::InvalidArg(key.into())),
+                _ => return Err(EnvironmentParseError::InvalidConfigKey(key.into())),
             }
         }
 

@@ -15,6 +15,7 @@ pub enum EnvironmentParseError {
     InvalidTimeout(String),
     ConfigFileError(String),
     InvalidOption(String, String),
+    InvalidConfigKey(String),
 }
 
 // Used when parsing an incoming request into a Request object
@@ -41,9 +42,8 @@ impl Display for EnvironmentParseError {
             Self::InvalidPort(x) => write!(f, "Not a valid port: {}", x),
             Self::InvalidTimeout(x) => write!(f, "Not a valid timeout: {}", x),
             Self::ConfigFileError(x) => write!(f, "Error processing configuration file: {}", x),
-            Self::InvalidOption(arg, option) => {
-                write!(f, "Invalid option `{}` for {}", option, arg)
-            }
+            Self::InvalidOption(arg, option) => write!(f, "Invalid option `{}` for {}", option, arg),
+            Self::InvalidConfigKey(key) => write!(f, "Invalid key `{}` in configuration file", key),
         }
     }
 }
