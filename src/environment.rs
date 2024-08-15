@@ -299,7 +299,7 @@ impl Environment {
         for line in lines.lines() {
             line_num += 1;
             // comments start with #
-            if line.trim().starts_with("#") {
+            if line.starts_with("#") {
                 continue;
             }
             // the split might interrupt if there are values which contain `=`
@@ -312,9 +312,8 @@ impl Environment {
                     line_num
                 )));
             }
-            let key = split[0].trim();
+            let key = split[0];
             let value = split[1..].join("");
-            let value = value.trim();
 
             match key.trim() {
                 "color" | "colour" => match default.process_color(Some(value.into())) {
