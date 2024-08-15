@@ -81,7 +81,9 @@ impl Environment {
         );
         let _ = writeln!(output, "\t-P, --port\t\tspecifies the port to listen on");
 
-        println!("{}", output);
+        let _ = writeln!(output, "\t-C --config-file\tuse a configuration file for the server. The config file may overwrite previously set command line options. On the other hand, you can overwrite config file options if you set them after giving the config file.");
+
+        eprint!("{}", output);
     }
 
     fn process_port(&mut self, port: String) -> Result<(), EnvironmentParseError> {
@@ -271,11 +273,7 @@ impl Environment {
         return Ok(default);
     }
 
-    pub fn from_config(
-        mut default: Self,
-        filename: String,
-    ) -> Result<Self, EnvironmentParseError> {
-
+    pub fn from_config(mut default: Self, filename: String) -> Result<Self, EnvironmentParseError> {
         let mut file = match File::open(&filename) {
             Ok(file) => file,
             Err(_) => {
@@ -324,45 +322,34 @@ impl Environment {
                     Err(err) => return Err(err),
                 },
 
-                "time" => {
-                    match default.process_time(value.into()) {
-                        Ok(_) => (),
-                        Err(err) => return Err(err),
-                    }
-                }
+                "time" => match default.process_time(value.into()) {
+                    Ok(_) => (),
+                    Err(err) => return Err(err),
+                },
 
-                "path" => {
-                    match default.process_path(value.into()) {
-                        Ok(_) => (),
-                        Err(err) => return Err(err),
-                    }
-                }
+                "path" => match default.process_path(value.into()) {
+                    Ok(_) => (),
+                    Err(err) => return Err(err),
+                },
 
-                "address" => {
-                    match default.process_address(value.into()) {
-                        Ok(_) => (),
-                        Err(x) => {
-                            return Err(x);
-                        }
+                "address" => match default.process_address(value.into()) {
+                    Ok(_) => (),
+                    Err(x) => {
+                        return Err(x);
                     }
-                }
+                },
 
-                "port" => {
-                    match default.process_port(value.into()) {
-                        Ok(_) => (),
-                        Err(err) => return Err(err),
-                    }
-                }
+                "port" => match default.process_port(value.into()) {
+                    Ok(_) => (),
+                    Err(err) => return Err(err),
+                },
 
-                "timeout" => {
-                    match default.process_timeout(value.into()) {
-                        Ok(_) => (),
-                        Err(err) => return Err(err),
-                    }
-                }
+                "timeout" => match default.process_timeout(value.into()) {
+                    Ok(_) => (),
+                    Err(err) => return Err(err),
+                },
 
                 _ => return Err(EnvironmentParseError::InvalidArg(key.into())),
-
             }
         }
 
