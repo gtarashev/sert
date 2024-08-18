@@ -5,6 +5,7 @@ use crate::{
     environment::Environment,
     log::{LogLevel, Logger},
     response::handle_client,
+    consts::*,
 };
 // std
 use std::{
@@ -19,12 +20,6 @@ use std::{
 };
 // termios
 use termios::{tcsetattr, Termios, ECHO, ICANON, IEXTEN, ISIG, TCSANOW};
-
-//      constants
-//      =========
-const STDIN_FILENO: i32 = 0;
-const CTRL_C: [u8; 3] = [3, 0, 0];
-const CTRL_Z: [u8; 3] = [26, 0, 0];
 
 //      functions
 //      =========
@@ -76,12 +71,7 @@ fn init_term() -> Termios {
 }
 
 // --------
-fn reset_term(termios: &Termios) {
-    tcsetattr(STDIN_FILENO, TCSANOW, termios).unwrap();
-}
-
-// --------
-pub fn start_listener(listener: Arc<TcpListener>, env: Arc<Environment>, logger: Arc<Logger>) {
+pub fn start_listener(listener: Arc<TcpListener>, env: Arc<Environment>, logger: Arc<Logger>) -> Termios {
     let stop = Arc::new(AtomicBool::new(false));
     let loop_handle = thread::spawn({
         let stop = Arc::clone(&stop);
@@ -108,7 +98,7 @@ pub fn start_listener(listener: Arc<TcpListener>, env: Arc<Environment>, logger:
             // thread exits when it goes out of scope
             CTRL_Z => {
                 logger.log(LogLevel::Warn, "Suspending process immediatelly.");
-                return;
+                return termios;
             }
 
 
@@ -133,6 +123,6 @@ pub fn start_listener(listener: Arc<TcpListener>, env: Arc<Environment>, logger:
             "Request handler has not finished. Will terminate.",
         );
     }
-    reset_term(&termios);
     logger.log(LogLevel::Null, "Terminating");
+    return termios;
 }

@@ -6,10 +6,12 @@ mod event_loop;
 mod log;
 mod request;
 mod response;
+mod consts;
 
 //      imports
 //      =======
 // crate
+use consts::STDIN_FILENO;
 use environment::Environment;
 use event_loop::start_listener;
 use log::{LogLevel, Logger};
@@ -21,8 +23,19 @@ use std::{
     sync::Arc,
 };
 
+use termios::{
+    Termios,
+    TCSANOW,
+    tcsetattr,
+};
+
 //      functions
 //      =========
+fn reset_term(termios: &Termios) {
+    tcsetattr(STDIN_FILENO, TCSANOW, termios).unwrap();
+}
+
+// --------
 fn main() {
     let mut args = env::args();
     let _ = args.next();
@@ -51,5 +64,6 @@ fn main() {
         }
     };
 
-    start_listener(listener, environment, logger);
+    let termios = start_listener(listener, environment, logger);
+    reset_term(&termios);
 }
