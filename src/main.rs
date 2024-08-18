@@ -46,7 +46,7 @@ fn main() {
     let listener = match TcpListener::bind(addr) {
         Ok(listener) => Arc::new(listener),
         Err(err) => {
-            logger.log(LogLevel::Error, err);
+            logger.log(LogLevel::Error, format!("Error starting up listener: {}", err));
             exit(1);
         }
     };

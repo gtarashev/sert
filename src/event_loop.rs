@@ -24,6 +24,7 @@ use termios::{tcsetattr, Termios, ECHO, ICANON, IEXTEN, ISIG, TCSANOW};
 //      =========
 const STDIN_FILENO: i32 = 0;
 const CTRL_C: [u8; 3] = [3, 0, 0];
+const CTRL_Z: [u8; 3] = [26, 0, 0];
 
 //      functions
 //      =========
@@ -98,9 +99,20 @@ pub fn start_listener(listener: Arc<TcpListener>, env: Arc<Environment>, logger:
     loop {
         // listen on stdin, match on certain sequences
         let _ = stdin.read(&mut buffer);
-        if buffer == CTRL_C {
-            stop.store(true, Ordering::Relaxed);
-            break;
+        match buffer {
+            CTRL_C => {
+                stop.store(true, Ordering::Relaxed);
+                break;
+            }
+
+            // thread exits when it goes out of scope
+            CTRL_Z => {
+                logger.log(LogLevel::Warn, "Suspending process immediatelly.");
+                return;
+            }
+
+
+            _ => (),
         }
     }
     logger.log(LogLevel::Warn, "Received terminating signal.");
