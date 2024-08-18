@@ -108,7 +108,7 @@ pub fn start_listener(listener: Arc<TcpListener>, env: Arc<Environment>, logger:
         logger.log(
             LogLevel::Warn,
             format!(
-                "Request handler has not finished. Waiting {} more seconds.",
+                "Request handler has not finished. Waiting {} more milliseconds.",
                 env.timeout
             ),
         );

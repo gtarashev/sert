@@ -13,6 +13,9 @@ pub enum EnvironmentParseError {
     InvalidAddr(String),
     InvalidPort(String),
     InvalidTimeout(String),
+    ConfigFileError(String),
+    InvalidOption(String, String),
+    InvalidConfigKey(String),
 }
 
 // Used when parsing an incoming request into a Request object
@@ -32,12 +35,15 @@ impl Display for EnvironmentParseError {
                 "Option {} expects an additional argument, but none was provided",
                 x
             ),
-            Self::InvalidArg(x) => write!(f, "Invalid option: {}", x),
+            Self::InvalidArg(x) => write!(f, "Invalid argument: {}", x),
             Self::InvalidPath(x) => write!(f, "Invalid directory: {}", x),
             Self::NotADir(x) => write!(f, "Expected a directory: {}", x),
             Self::InvalidAddr(x) => write!(f, "Not a valid address: {}", x),
             Self::InvalidPort(x) => write!(f, "Not a valid port: {}", x),
             Self::InvalidTimeout(x) => write!(f, "Not a valid timeout: {}", x),
+            Self::ConfigFileError(x) => write!(f, "Error processing configuration file: {}", x),
+            Self::InvalidOption(arg, option) => write!(f, "Invalid option `{}` for {}", option, arg),
+            Self::InvalidConfigKey(key) => write!(f, "Invalid key `{}` in configuration file", key),
         }
     }
 }
